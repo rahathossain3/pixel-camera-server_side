@@ -26,6 +26,9 @@ async function run() {
         await client.connect();
         //products collections
         const productCollection = client.db('pixel_camera').collection('products');
+        //products collections
+        const reviewCollection = client.db('pixel_camera').collection('reviews');
+
 
         //get all products
         app.get('/product', async (req, res) => {
@@ -37,6 +40,17 @@ async function run() {
         })
 
 
+
+
+        //get all reviews
+
+        app.get('/review', async (req, res) => {
+            const query = {};
+            const cursor = reviewCollection.find(query);
+            const products = await cursor.toArray();
+
+            res.send(products)
+        })
 
 
 
