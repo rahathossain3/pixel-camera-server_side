@@ -22,7 +22,6 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 
 
 
-
 // for jwt verifications 
 function verifyJWT(req, res, next) {
     // 1: read authHeader
