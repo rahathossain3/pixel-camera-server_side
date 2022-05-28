@@ -134,28 +134,48 @@ async function run() {
         })
 
 
-        //order section
-        // app.put('/order', async (req, res) => {
-        //     const newProduct = req.body;
-        //     const result = await orderCollection.insertOne(newProduct);
-        //     res.send(result);
+        //order section---------------------
+        app.put('/order', async (req, res) => {
+            const newProduct = req.body;
+            const result = await orderCollection.insertOne(newProduct);
+            res.send(result);
+        })
+
+        // app.post('/order/:id', async (req, res) => {
+        //     const id = req.params.id;
+        //     const user = req.body;
+        //     // const id = req.params.id;
+        //     const filter = { _id: ObjectId(id) };
+        //     // thakle update, na thakle create
+        //     const options = { upsert: true };
+
+        //     const updateDoc = {
+        //         $set: req.body,
+        //     };
+        //     const result = await orderCollection.updateOne(filter, updateDoc, options);
+
+        //     res.send(result)
         // })
 
-        app.put('/order/:id', async (req, res) => {
-            const id = req.params.id;
-            const user = req.body;
-            // const id = req.params.id;
-            const filter = { _id: ObjectId(id) };
-            // user: thakle update, na thakle create
-            const options = { upsert: true };
+        //get booking data with jwt verify
+        app.get('/order', verifyJWT, async (req, res) => {
+            const product = req.query.product;
 
-            const updateDoc = {
-                $set: req.body,
-            };
-            const result = await orderCollection.updateOne(filter, updateDoc, options);
-
-            res.send(result)
+            //for jwt verification after verifyJWT
+            const decodedEmail = req.decoded.email;
+            if (product === decodedEmail) {
+                // console.log('auth header', authorization)
+                // const query = { _id: ObjectId(id) };
+                const query = { bEmail: product };
+                const orders = await orderCollection.find(query).toArray();
+                return res.send(orders);
+            }
+            else {
+                return res.status(403).send({ message: 'forbidden access' });
+            }
         })
+
+
 
         // ----------------------
 
