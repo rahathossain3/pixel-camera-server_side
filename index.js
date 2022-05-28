@@ -59,6 +59,20 @@ async function run() {
         const usersCollection = client.db('pixel_camera').collection('users');
 
 
+        // verify admin section
+        // for admin verify
+        const verifyAdmin = async (req, res, next) => {
+            const requester = req.decoded.email;
+            const requesterAccount = await usersCollection.findOne({ email: requester });
+            if (requesterAccount.role === 'admin') {
+                next();
+            }
+            else {
+                res.send(403).send({ message: 'forbidden' });
+            }
+        }
+
+
         //get all products
         app.get('/product', async (req, res) => {
             const query = {};
@@ -85,7 +99,7 @@ async function run() {
 
         //product delete for admin
         // app.delete('/product/:id', verifyJWT, verifyAdmin, async (req, res) => {
-        app.delete('/product/:id', async (req, res) => {
+        app.delete('/product/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             const filter = { _id: ObjectId(id) };
             const result = await productCollection.deleteOne(filter);
@@ -93,6 +107,27 @@ async function run() {
         })
 
 
+        // users Roll make admin  and jwt*********
+        app.put('/user/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
+            const email = req.params.email;
+
+            // if (requesterAccount.role === 'admin') {
+            const filter = { email: email };
+            const updateDoc = {
+                $set: { role: 'admin' },
+            };
+            const result = await usersCollection.updateOne(filter, updateDoc);
+            //send data
+            res.send(result)
+        })
+
+
+        // user section
+        // get all users
+        app.get('/user', verifyJWT, async (req, res) => {
+            const users = await usersCollection.find().toArray();
+            res.send(users)
+        })
 
         // users collection with jwt
         app.put('/user/:email', async (req, res) => {
