@@ -57,6 +57,8 @@ async function run() {
         const reviewCollection = client.db('pixel_camera').collection('reviews');
         //user collections
         const usersCollection = client.db('pixel_camera').collection('users');
+        //user collections
+        const orderCollection = client.db('pixel_camera').collection('orders');
 
 
         // verify admin section
@@ -131,6 +133,31 @@ async function run() {
             res.send(result)
         })
 
+
+        //order section
+        // app.put('/order', async (req, res) => {
+        //     const newProduct = req.body;
+        //     const result = await orderCollection.insertOne(newProduct);
+        //     res.send(result);
+        // })
+
+        app.put('/order/:id', async (req, res) => {
+            const id = req.params.id;
+            const user = req.body;
+            // const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            // user: thakle update, na thakle create
+            const options = { upsert: true };
+
+            const updateDoc = {
+                $set: req.body,
+            };
+            const result = await orderCollection.updateOne(filter, updateDoc, options);
+
+            res.send(result)
+        })
+
+        // ----------------------
 
         // user section
         // get all users
