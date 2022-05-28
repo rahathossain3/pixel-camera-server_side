@@ -21,6 +21,33 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
 
+
+
+// for jwt verifications 
+function verifyJWT(req, res, next) {
+    // 1: read authHeader
+    const authHeader = req.headers.authorization;
+    // 2
+    if (!authHeader) {
+        return res.status(401).send({ message: 'UnAuthorized access' });
+    }
+    //2.1: jodi token thake (get token)
+    const token = authHeader.split(' ')[1];
+    // 3: verify
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+        if (err) {
+            return res.status(403).send({ message: 'Forbidden access' })
+        }
+        req.decoded = decoded;
+        //4:next
+        next();
+        // console.log(decoded); 
+    });
+    // console.log('abc');
+}
+
+
+
 async function run() {
     try {
         await client.connect();
@@ -28,6 +55,8 @@ async function run() {
         const productCollection = client.db('pixel_camera').collection('products');
         //products collections
         const reviewCollection = client.db('pixel_camera').collection('reviews');
+        //user collections
+        const usersCollection = client.db('pixel_camera').collection('users');
 
 
         //get all products
@@ -48,7 +77,6 @@ async function run() {
         })
 
         //add product from client
-
         app.post('/product', async (req, res) => {
             const newProduct = req.body;
             const result = await productCollection.insertOne(newProduct);
@@ -62,6 +90,26 @@ async function run() {
             const filter = { _id: ObjectId(id) };
             const result = await productCollection.deleteOne(filter);
             res.send(result);
+        })
+
+
+
+        // users collection with jwt
+        app.put('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = req.body;
+            const filter = { email: email };
+            // user: thakle update, na thakle create
+            const options = { upsert: true };
+
+            const updateDoc = {
+                $set: user,
+            };
+            const result = await usersCollection.updateOne(filter, updateDoc, options);
+            // for JWT create
+            const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '5h' })
+            //send data
+            res.send({ result, token })
         })
 
 
